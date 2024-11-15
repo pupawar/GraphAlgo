@@ -11,8 +11,8 @@ class edges(db.Model):
     __tablename__ = "edges"
     source = db.Column(db.Integer(), db.ForeignKey('nodes.id'), primary_key=True)
     target = db.Column(db.Integer(), db.ForeignKey('nodes.id'), primary_key=True)
+    weight = db.Column(db.Integer())
     __table_args__ =(
         db.PrimaryKeyConstraint('source', 'target'),
-
     )
 
