@@ -5,6 +5,7 @@ from sqlalchemy import text
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 from models import db, edges, nodes
+from flask_cors import CORS
 # import logging
 
 # logging.basicConfig()
@@ -17,7 +18,7 @@ from api import api
 load_dotenv()
 
 app = Flask(__name__)
-
+CORS(app)
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = quote_plus(os.getenv('DB_PASSWORD'))
 DB_NAME = os.getenv('DB_NAME')
