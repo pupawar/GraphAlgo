@@ -78,8 +78,9 @@
 
       nodes.value = data.nodes;
       edges.value = data.edges;
-      nextNodeIndex.value = Object.keys(nodes.value).length + 1;
-      nextEdgeIndex.value = Object.keys(edges.value).length + 1
+      
+      nextNodeIndex.value = Object.keys(nodes.value).length ? Math.max(...Object.keys(nodes.value).map(Number)) + 1 : 1
+      nextEdgeIndex.value = Object.keys(edges.value).length ? Math.max(...Object.keys(edges.value).map(Number)) + 1 : 1
     
     } catch (error) {
       console.error(error);
@@ -91,32 +92,99 @@
   //   console.log(selectedEdge.value[0])
   // }
 
-  function addNode(){
+  async function addNode() {
     const newNode = nextNodeIndex.value;
     const name = `Node ${nextNodeIndex.value}`;
+    console.log(newNode)
     nodes.value[newNode] = {name};
+    await fetch(`${API_URL}/add_node`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: newNode,
+        name: name
+      })
+    });
     nextNodeIndex.value++;
   }
 
-  function addEdge(){
-    edges.value[`edge${nextEdgeIndex.value}`] = {source: selectedNodes.value[0], target: selectedNodes.value[1], label: '1'}
+  async function addEdge(){
+    edges.value[nextEdgeIndex.value] = {source: selectedNodes.value[0], target: selectedNodes.value[1], label: '1'}
+    await fetch(`${API_URL}/add_edge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: nextEdgeIndex.value,
+        source: selectedNodes.value[0],
+        target: selectedNodes.value[1],
+        weight: '1'
+      })
+    });
     nextEdgeIndex.value++;
   }
 
+  async function saveGraph(){
+    const changed_nodes = []
+    const changed_edges = []
+    for(const node in nodes.value){
+      changed_nodes.push({"id": node, "name" : nodes.value[node].name});
+    }
+    for(const edge in edges.value){
+      changed_edges.push({"id": edge, "source": edges.value[edge].source, "target" : edges.value[edge].target, "weight" : edges.value[edge].label});
+    }
+    const graph = {"nodes" : changed_nodes, "edges" : changed_edges};
+
+    const response = await fetch(`${API_URL}/create_undirected_graph`, {
+      method: 'POST',
+      headers: {
+        'Content-Type' : 'application/json',
+      },
+      body: JSON.stringify(graph)
+    });
+    console.log(response.text());
+  }
   watch(selectedNodes, (newValue) => {
     console.log("Selected Nodes:", newValue);
+    console.log(edges);
   });
 
-  function editWeight(){
+  async function editWeight(){
+    
+    await fetch(`${API_URL}/edit_edge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({id: selectedEdge.value[0], weight: weight.value})
+    });
     edges.value[selectedEdge.value[0]].label = weight.value;
     weight.value = '';
   }
-  function deleteEdge(){
+  async function deleteEdge(){
+    await fetch(`${API_URL}/delete_edge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({id: selectedEdge.value[0]})
+    });
     delete edges.value[selectedEdge.value[0]];
+
   }
 
 
   function deleteNode(){
+    fetch(`${API_URL}/delete_node`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({id: selectedNodes.value[0]})
+    });
     Object.keys(edges.value).forEach(key => {
       if(edges.value[key].target == selectedNodes.value[0] || edges.value[key].source == selectedNodes.value[0] ){
         delete edges.value[key];

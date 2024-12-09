@@ -18,7 +18,7 @@ from api import api
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = quote_plus(os.getenv('DB_PASSWORD'))
 DB_NAME = os.getenv('DB_NAME')
